@@ -1,0 +1,23 @@
+{
+    proc float[] getNormalVector(float [] $vA, float [] $vB, float [] $vC) {
+        return "Stub"
+    }
+    proc float[] getPlaneEquation(float [] $vA, float [] $vB, float [] $vC) {
+        return "Stub"
+    }
+    proc float[] getPointPlaneDistance(float [] $plane, float [] $point) {
+        return "Stub"
+    }
+    proc float[] getLinePlaneIntersection(float [], float [], float []) {
+        return "Stub"
+    }
+    proc matrix getCorners(string $nameOfObject) {
+        return "Stub"
+    }
+    proc float getDotProduct(float [] $v1, float [] $v2) {
+        return "Stub"
+    }
+    proc float [] getCrossProduct(float [] $v1, float [] $v2) {
+        return "Stub"
+    }
+}
