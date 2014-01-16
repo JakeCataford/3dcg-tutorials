@@ -22,7 +22,7 @@
         $result += $v1[0] * $v2[0];
         $result += $v1[1] * $v2[1];
         $result += $v1[2] * $v2[2];
-        //I'm used to doing test driven development, so I assert here to make sure my result is correct.
+
         float $expectedResult = dotProduct($v1,$v2, false);
         if($result != $expectedResult) {
             print("ASSERTION FAILED: Dot product was " + $result + " Instead of " + $expectedResult);
@@ -31,12 +31,35 @@
         return $result;
     }
     
-    /*
-    proc float [] getCrossProduct(float [] $v1, float [] $v2) {
-        return ;
+    
+    proc float [] getCrossProduct(float $v1[], float $v2[]) {
+        float $result[4];
+        
+        $result[0] = ($v1[1] * $v2[2]) - ($v1[2] * $v2[1]);
+        $result[1] = ($v1[0] * $v2[2]) - ($v1[2] * $v2[0]);
+        $result[2] = ($v1[0] * $v2[1]) - ($v1[1] * $v2[0]);
+        
+        float $expectedResult[] = crossProduct($v1,$v2, false, false);
+        
+        if($result[0] != $expectedResult[0]) {
+            print("ASSERTION FAILED: Cross product x was " + $result[0] + " Instead of " + $expectedResult[0]);
+        }
+        
+        if($result[1] != $expectedResult[1]) {
+            print("ASSERTION FAILED: Cross product y was " + $result[1] + " Instead of " + $expectedResult[1]);
+        }
+        
+        if($result[2] != $expectedResult[2]) {
+            print("ASSERTION FAILED: Cross product z was " + $result[2] + " Instead of " + $expectedResult[2]);
+        }
+        
+        
+        return $result;
     }
-    */
     
     
-    getDotProduct({0,1,2},{0,2,3});
+    
+    print(getDotProduct({0,1,2},{0,2,3}) + "\n");
+    print(getCrossProduct({0,1,2},{0,2,3}));
+
 }
