@@ -1,23 +1,42 @@
 {
+    /*
     proc float[] getNormalVector(float [] $vA, float [] $vB, float [] $vC) {
-        return "Stub"
+        return "Stub";
     }
     proc float[] getPlaneEquation(float [] $vA, float [] $vB, float [] $vC) {
-        return "Stub"
+        return "Stub";
     }
     proc float[] getPointPlaneDistance(float [] $plane, float [] $point) {
-        return "Stub"
+        return "Stub";
     }
     proc float[] getLinePlaneIntersection(float [], float [], float []) {
-        return "Stub"
+        return "Stub";
     }
     proc matrix getCorners(string $nameOfObject) {
-        return "Stub"
+        return "Stub";
     }
-    proc float getDotProduct(float [] $v1, float [] $v2) {
-        return "Stub"
+    */
+    proc float getDotProduct(float $v1[], float $v2[]) {
+        float $result;
+        
+        $result += $v1[0] * $v2[0];
+        $result += $v1[1] * $v2[1];
+        $result += $v1[2] * $v2[2];
+        //I'm used to doing test driven development, so I assert here to make sure my result is correct.
+        float $expectedResult = dotProduct($v1,$v2, false);
+        if($result != $expectedResult) {
+            print("ASSERTION FAILED: Dot product was " + $result + " Instead of " + $expectedResult);
+        }
+        
+        return $result;
     }
+    
+    /*
     proc float [] getCrossProduct(float [] $v1, float [] $v2) {
-        return "Stub"
+        return ;
     }
+    */
+    
+    
+    getDotProduct({0,1,2},{0,2,3});
 }
