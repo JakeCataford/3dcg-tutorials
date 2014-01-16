@@ -135,7 +135,11 @@
                 //No bool types in mel. false resolves to 0.
                 int $updateFace = false;
                 
-                //For each face in the selected mesh...
+                //For each face in the selected mesh... 
+                //We pick the first child of the facetCount here because each array element
+                //represents a different submesh. If you have ever assigned a different material
+                //to two different parts faces in the same mesh, then you have created a submesh.
+                //submeshes are sets of triangles that are rendered with the same draw call.
                 for ($face = 0; $face < $facetCount[0]; $face++) {
                    
                     //Each face is a triangle, so lets get the verts in the current triangle 
