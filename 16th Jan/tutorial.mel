@@ -41,7 +41,9 @@
         float $floatValues[];
         $numValues = `tokenize $stringValues $valueList`;
         
-        //Our first two variables correspond to the object name and the id, so we dont need them.
+        // Tokenize splits a string on whitespace, so we are giving it something like this:
+        // FACE      0:      0      1      3      2 
+        // hence the first two values are useless.
         for($i = 0; $i < $numValues - 2; $i++) {
             $floatValues[$i] = (float) ($valueList[$i+2]);
         }
