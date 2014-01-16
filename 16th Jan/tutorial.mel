@@ -1,0 +1,204 @@
+{
+    // new file, everything in the scene will be erased.
+    file -f -new;
+    
+    
+    proc matrix getRotationMatrix(float $rotX, float $rotY, float $rotZ) {
+        
+        //This function returns a matrix that we need to multiply the transform
+        //By in order to rotate by n degrees around the specified axis.
+        
+        matrix $mRot[4][4];
+        
+        //matrix for rotation around x...
+        matrix $mX[4][4] = <<1,0,0,0;
+                             0, cos($rotX), (-1*sin($rotX)), 0;
+                             0, sin($rotX), cos($rotX), 0; 
+                             0, 0, 0, 1>>;
+                             
+        
+        //matrix for rotation around y...                     
+        matrix $mY[4][4] = <<cos($rotY), 0, sin($rotY), 0;
+                             0, 1, 0, 0;
+                             (-1*sin($rotY)), 0, cos($rotY), 0;
+                             0, 0, 0, 1>>;
+                             
+        //matrix for rotation around z...                 
+        matrix $mZ[4][\4] = <<cos($rotZ), (-1*sin($rotZ)), 0, 0;
+                             sin($rotZ), cos($rotZ), 0, 0; 
+                             0, 0, 1, 0;
+                             0, 0, 0, 1>>;
+        
+        $mRot = $mX * $mY * $mZ;
+        //return the product of the matrices, this will give you a resulting matrix.          
+        return $mRot;
+    }
+    
+    proc float[] extractValues(string $stringValues) {
+        
+        //Take our list of values, which is a string, and split it on spaces.
+        string $valueList[];
+        float $floatValues[];
+        $numValues = `tokenize $stringValues $valueList`;
+        
+        //Our first two variables correspond to the object name and the id, so we dont need them.
+        for($i = 0; $i < $numValues - 2; $i++) {
+            $floatValues[$i] = (float) ($valueList[$i+2]);
+        }
+        
+        return $floatValues;
+    }
+    
+    //Define a function to create a locator
+    proc createLocator() {
+        if(`objExists myRef`) {
+            //if the object exists, don't create it again...
+            print ("myRef exists\n");
+            return;
+        }
+        
+        //Create a locator
+        spaceLocator -n myRef;
+        //Move it to (20,5,20) (translation)
+        move -xyz 20 5 20;
+        //Print so we know when this is complete
+        print ("myRef created\n");
+    }
+    
+    proc float [] getNorm(float $vtxA[], float $vtxB[], float $vtxC[]) {
+        
+        //Define the variables for this function
+        float $normalVector[], $v1[3], $v2[3];
+        
+        //Get the vectors that run along two of the edges of the triangle.
+        $v1[0] = $vtxB[0] - $vtxA[0];
+        $v1[1] = $vtxB[1] - $vtxA[1];
+        $v1[2] = $vtxB[2] - $vtxA[2];
+        
+        $v2[0] = $vtxC[0] - $vtxA[0];
+        $v2[1] = $vtxC[1] - $vtxA[1];
+        $v2[2] = $vtxC[2] - $vtxA[2];
+        
+        //If we cross product them, we get the normal vector.
+        $normalVector = crossProduct($v1, $v2, 0, 1);
+        return $normalVector;
+    }
+    
+    //Run an action in a directon. 
+    proc adjustSelected(string $action, string $direction) {
+        //Get a list of our selected nodes.
+        string $selectedShapes[] = `ls -selection`;
+        
+        //for each shape that is selected...
+        for ($shape in $selectedShapes) {
+            
+            //Get the shapetype, top level nodes are all Transform nodes.
+            
+            /* Transform nodes contain a matrix and a list of children,
+               the positions of the children inherit the transformations
+               of the transform node. */
+                   
+            $shapeType = `objectType $shape`;
+            
+            
+            //if it's a transform....
+            if ($shapeType == "transform") {
+                //Grab the nodes children...
+                string $childShape[];
+                $childShape = `listRelatives -fullPath -shapes $shape`;
+                
+                /* Get the object type of the first child, in simple cases,
+                   this is just the shape node that defines the mesh. But
+                   in more complicated heirchies you won't be able to just 
+                   check the first child */
+                $shapeType = `objectType $childShape[0]`;
+                
+                // if it's not a mesh, we cant use this shape... break out of this function.
+                if ($shapeType != "mesh") continue;
+                
+                //facet is a technical name for a triangle in a polygonal object., let's get them all.
+                int $facetCount[] = `polyEvaluate -face $shape`;
+                
+                // query for the transform of our shape...
+                float $posShape[] = `xform -q -t -ws $shape`;
+                //query the transform of our reference
+                float $posRef[] = `xform -q -t -ws myRef`;
+                
+                // A vector is really just an array with  length of 3...
+                float $objVec[3];
+                //Get the components of the vector from the locator, 
+                //objVec will represent a vector from the shape to the locator 
+                $objVec[0] = $posShape[0] - $posRef[0];
+                $objVec[1] = $posShape[1] - $posRef[1];
+                $objVec[2] = $posShape[2] - $posRef[2];
+                
+                //No bool types in mel. false resolves to 0.
+                int $updateFace = false;
+                
+                //For each face in the selected mesh...
+                for ($face = 0; $face < $facetCount[0]; $face++) {
+                   
+                    //Each face is a triangle, so lets get the verts in the current triangle 
+                    string $vtxs[] = `polyInfo -fv ($shape + ".f[" + $face + "]")`;
+                    
+                    //Get the vertex order
+                    float $vtxIdx[] = extractValues($vtxs[0]); 
+                    
+                    //Get the xyz values of the three verts from that triangle
+                    float $vtxA[] = `getAttr ($shape + ".vt[" + $vtxIdx[0] + "]")`;
+                    float $vtxB[] = `getAttr ($shape + ".vt[" + $vtxIdx[1] + "]")`;
+                    float $vtxC[] = `getAttr ($shape + ".vt[" + $vtxIdx[2] + "]")`;
+                    
+                    //get our normal vector from our custom function
+                    float $fN[] = getNorm($vtxA, $vtxB, $vtxC);
+                    
+                    //Get the dot product
+                    float $dp = dotProduct($fN, $objVec, 1);
+                    
+                    $updateFace = false;
+                    if($direction == "acute" && $dp > 0) {
+                        $updateFace = true;
+                    } else if ($direction == "obtuse" && $dp > 0) {
+                        $updateFace = true;
+                    } else if ($direction == "right" && $dp == 0) {
+                        $updateFace = true;
+                    }
+                    
+                    if($updateFace == true) {
+                        polyDelFacet ($shape + ".f[" + $face + "]");
+                    } else if($action == "extrude") {
+                        polyExtrudeFacet -t $fN[0] $fN[1] $fN[2] ($shape + ".f[" + $face + "]");
+                    }
+                   
+                }
+            }
+        }
+    }
+    
+    //Call out function from above
+    createLocator();
+    
+    //Create a cube.
+    polySphere -n myCube -radius 5;
+    
+    //Translate via a matrix...
+    xform -a -m 1 0 0 0 
+                0 1 0 0 
+                0 0 1 0 
+                -10 0 -10 1;
+    
+    select -r myCube;
+    
+    // Call our function.         
+    adjustSelected("extrude", "acute");
+    //Get a matrix for a rotation around the y axis.
+    matrix $ml[4][4] = getRotationMatrix(0, 1.57, 0); //in radians! note: cg angles are always in radians degrees are for human readability.
+    select myCube;
+    //Transform by that matrix.
+    xform -a -m $ml[0][0] $ml[0][1] $ml[0][2] $ml[0][3]
+                $ml[1][0] $ml[1][1] $ml[1][2] $ml[1][3]
+                $ml[2][0] $ml[2][1] $ml[2][2] $ml[2][3]
+                $ml[3][0] $ml[3][1] $ml[3][2] $ml[3][3];
+    
+    
+}
