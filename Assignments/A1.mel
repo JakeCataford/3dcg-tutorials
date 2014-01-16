@@ -1,4 +1,15 @@
 {
+    //NON ASSIGNMENT PROCS
+    proc float[] extractValues(string $stringValues) {
+        string $valueList[];
+        float $floatValues[];
+        $numValues = `tokenize $stringValues $valueList`;
+        for($i = 0; $i < $numValues - 2; $i++) {
+            $floatValues[$i] = (float) ($valueList[$i+2]);
+        }
+        
+        return $floatValues;
+    }
     /*
     proc float[] getNormalVector(float [] $vA, float [] $vB, float [] $vC) {
         return "Stub";
@@ -12,10 +23,32 @@
     proc float[] getLinePlaneIntersection(float [], float [], float []) {
         return "Stub";
     }
-    proc matrix getCorners(string $nameOfObject) {
-        return "Stub";
-    }
     */
+    proc float[] getCorners(string $mesh) {
+        float $result[];
+        int $facetCount[] = `polyEvaluate -face ($mesh+".f[0]")`;
+        int $currentResultIndex = 0;
+        if($facetCount[0] == 1) {
+            //This is a case where the mesh has only one face, and therefore the corners are just the verts of that face.
+            $faceString = `polyInfo -fv ($mesh + ".f[0]")`;
+            float $vertexIndeces[] = extractValues($faceString[0]);
+            for($i = 0; $i < size($vertexIndeces); $i++) {
+                 float $vertex[] = `getAttr ($mesh + ".vt[" + $vertexIndeces[$i] + "]")`;
+                 
+                 for($f in $vertex) {
+                     $result[$currentResultIndex] = $f;
+                     $currentResultIndex ++;
+                 }
+            }
+        } else {
+            //TODO: handle many different subdivisions, define a corner as any vertex that only has two edges.
+            //TODO: handle continuous meshes like a cube or sphere.
+        }
+        
+        return $result;
+        
+    }
+    
     proc float getDotProduct(float $v1[], float $v2[]) {
         float $result;
         
@@ -33,24 +66,24 @@
     
     
     proc float [] getCrossProduct(float $v1[], float $v2[]) {
-        float $result[4];
+        float $resultingVector[4];
         
         $result[0] = ($v1[1] * $v2[2]) - ($v1[2] * $v2[1]);
         $result[1] = ($v1[0] * $v2[2]) - ($v1[2] * $v2[0]);
         $result[2] = ($v1[0] * $v2[1]) - ($v1[1] * $v2[0]);
         
-        float $expectedResult[] = crossProduct($v1,$v2, false, false);
+        float $expectedResultingVector[] = crossProduct($v1,$v2, false, false);
         
-        if($result[0] != $expectedResult[0]) {
-            print("ASSERTION FAILED: Cross product x was " + $result[0] + " Instead of " + $expectedResult[0]);
+        if($result[0] != $expectedResultingVector[0]) {
+            print("ASSERTION FAILED: Cross product x was " + $result[0] + " Instead of " + $expectedResultingVector[0]);
         }
         
-        if($result[1] != $expectedResult[1]) {
-            print("ASSERTION FAILED: Cross product y was " + $result[1] + " Instead of " + $expectedResult[1]);
+        if($result[1] != $expectedResultingVector[1]) {
+            print("ASSERTION FAILED: Cross product y was " + $result[1] + " Instead of " + $expectedResultingVector[1]);
         }
         
-        if($result[2] != $expectedResult[2]) {
-            print("ASSERTION FAILED: Cross product z was " + $result[2] + " Instead of " + $expectedResult[2]);
+        if($result[2] != $expectedResultingVector[2]) {
+            print("ASSERTION FAILED: Cross product z was " + $result[2] + " Instead of " + $expectedResultingVector[2]);
         }
         
         
@@ -58,8 +91,16 @@
     }
     
     
-    
+    select mPlane;
     print(getDotProduct({0,1,2},{0,2,3}) + "\n");
     print(getCrossProduct({0,1,2},{0,2,3}));
+    float $corners[] = getCorners("mPlane");
+    print $corners;
+    int $currentCorner = 0;
+    for($i = 0; $i < size($corners); $i+=3) {
+        string $locator[] = `spaceLocator -p $corners[$i] $corners[$i + 1] $corners[$i + 2] -name ("Corner: "+$currentCorner)`;
+        parent -r $locator mPlane ;
+        $currentCorner++;
+    }
 
 }
