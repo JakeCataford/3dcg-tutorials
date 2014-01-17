@@ -1,4 +1,12 @@
 {
+    //Reset
+    select mPlane;
+    string $children[] = `listRelatives -ad -type transform`;
+    for($name in $children) {
+        select $name;
+        doDelete;
+    }
+    
     //NON ASSIGNMENT PROCS
     proc float[] extractValues(string $stringValues) {
         string $valueList[];
@@ -10,10 +18,29 @@
         
         return $floatValues;
     }
-    /*
-    proc float[] getNormalVector(float [] $vA, float [] $vB, float [] $vC) {
-        return "Stub";
+    
+    proc float[] normalizeVector(float $vector[]) {
+       float $result[3];
+       $magnitude = sqrt(($vector[0] * $vector[0]) + ($vector[1] * $vector[1]) + ($vector[2] * $vector[2]));
+       $result[0] = $vector[0]/$magnitude;
+       $result[1] = $vector[1]/$magnitude;
+       $result[2] = $vector[2]/$magnitude;
+       return $result;
     }
+   
+    proc float[] getNormalVector(float $vA[], float $vB[], float $vC[]) {
+        float $v1[3], $v2[3];
+        $v1[0] = $vA[0] - $vC[0];
+        $v1[1] = $vA[1] - $vC[1];
+        $v1[2] = $vA[2] - $vC[2];
+        
+        $v2[0] = $vB[0] - $vC[0];
+        $v2[1] = $vB[1] - $vC[1];
+        $v2[2] = $vB[2] - $vC[2];
+        
+        return getCrossProduct($v1, $v2);
+    }
+      /*
     proc float[] getPlaneEquation(float [] $vA, float [] $vB, float [] $vC) {
         return "Stub";
     }
@@ -92,6 +119,7 @@
     
     
     select mPlane;
+    float $planePosition[3] = `xform -worldSpace -query -translation mPlane`;
     print(getDotProduct({0,1,2},{0,2,3}) + "\n");
     print(getCrossProduct({0,1,2},{0,2,3}));
     float $corners[] = getCorners("mPlane");
@@ -102,5 +130,10 @@
         parent -r $locator mPlane ;
         $currentCorner++;
     }
+    
+    float $normal[3] = getNormalVector({$corners[0],$corners[1],$corners[2]}, {$corners[3],$corners[4],$corners[5]}, {$corners[6],$corners[7],$corners[8]});
+    $normal = normalizeVector($normal);
+    string $normalWidget = `curve -d 1 -p 0 0 0 -p $normal[0] $normal[1] $normal[2] -k 0 -k 1 `;
+    parent -r $normalWidget mPlane;
 
 }
