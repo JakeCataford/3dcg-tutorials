@@ -1,0 +1,34 @@
+{
+    // Global Procs and Vars
+    proc createMesh(int $meshType) {
+        switch($meshType) {
+            case 1: polyCube; break;
+            case 2: polySphere; break;
+            case 3: polyPlane; break;
+            case 4: polyHelix; break;
+            default: break;
+        }
+    }
+    // Window Content
+    
+    //Window init
+    
+    string $windowName = "Generator";
+    if(`window -exists $windowName`) {
+        deleteUI -window $windowName;
+    }
+    window $windowName;
+    
+    columnLayout -adjustableColumn true;
+        frameLayout -collapsable true -label "Modelin' Tab";
+            flowLayout -wrap 1;
+                button -command "createMesh(1)" -label "Cube";
+                button -command "createMesh(2)" -label "Sphere";
+                button -command "createMesh(3)" -label "Plane";
+                button -command "createMesh(4)" -label "Helix";
+            setParent ..;
+        setParent ..;
+    
+    
+    showWindow $windowName;
+}

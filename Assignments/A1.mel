@@ -1,6 +1,11 @@
 {
-    //Reset
+    string $initialSelection[] = `ls -sl -typ transform`;
+    //Reset routines
     select mPlane;
+
+    //Delete child transform nodes, specifically the locators 
+    //used to represent the corners and the spline to represent 
+    //the normals.
     string $children[] = `listRelatives -ad -type transform`;
     for($name in $children) {
         select $name;
@@ -18,6 +23,11 @@
         
         return $floatValues;
     }
+
+    proc int isPointOnPlane(float $point[], float $plane[]) {
+        //if Ax + By + Cz + D = 0 then the line is on the plane.
+        return $plane[0] * $point[0] + $plane[1] * $point[1] + $plane[2] * $point[2] + $plane[3] == 0;
+    }
     
     proc float[] normalizeVector(float $vector[]) {
        float $result[3];
@@ -27,7 +37,20 @@
        $result[2] = $vector[2]/$magnitude;
        return $result;
     }
-   
+
+    proc string[] findAllMeshesInSelection() {
+        //12 is the mask for meshes...
+        string $result[] = `filterExpand -sm 12 $initialSelection`;
+        return $result;
+    }
+    
+    proc string[] findAllLocatorsInSelection() {
+        //22 for locators...
+        string $result[] = `filterExpand -sm 22 $initialSelection`;
+        return $result;
+    }
+
+    //ASSIGNMENT PROCS
     proc float[] getNormalVector(float $vA[], float $vB[], float $vC[]) {
         float $v1[3], $v2[3];
         $v1[0] = $vA[0] - $vC[0];
@@ -40,18 +63,93 @@
         
         return getCrossProduct($v1, $v2);
     }
-      /*
-    proc float[] getPlaneEquation(float [] $vA, float [] $vB, float [] $vC) {
-        return "Stub";
+
+    proc float[] getPlaneEquation(float $vA[], float $vB[], float $vC[]) {
+        float $vN[3]; 
+        $vN = getNormalVector($vA, $vB, $vC);
+        float $vD = 0;
+        $vD += $vN[0] * $vA[0];
+        $vD += $vN[1] * $vA[1];
+        $vD += $vN[2] * $vA[2];
+
+        float $solution[4];
+
+        $solution[0] = $vN[0];
+        $solution[1] = $vN[1];
+        $solution[2] = $vN[2];
+        $solution[3] = -$vD; // Negative bc plane equation is Ax + By + Cz + D = 0; and we solved D on the right hand side, inverting its sign.
+
+        return $solution;
     }
-    proc float[] getPointPlaneDistance(float [] $plane, float [] $point) {
-        return "Stub";
+
+    proc float getPointPlaneDistance(float $plane[], float $point[]) {
+        //Plane equation for the point, projected onto the normal, 
+        //Ax + By + Cz + D = 0 if the point is on the plane...
+        //Ax + By + Cz + D = VAL if it isn't, value being the difference in distance from the origin to the point and the origin and the plane 
+        //Formula for point plane distance is {A, B, C} . (P-X)/lengthOf({A,B,C}) 
+        //where X is the point {0,0,-D/C} (hence, on the plane) and P is the given point.
+        //simplified, this gives us:
+        return ($plane[0] * $point[0] + $plane[1] * $point[1] + $plane[2] * $point[2] + $plane[3]) / sqrt($plane[0]*$plane[0] + $plane[1]*$plane[1] + $plane[2]*$plane[2]);
     }
-    proc float[] getLinePlaneIntersection(float [], float [], float []) {
-        return "Stub";
+
+    proc float[] getLinePlaneIntersection(float $plane[], float $pointA[], float $pointB[]) {
+        int $isPointAOnPlane = isPointOnPlane($pointA, $plane);
+        int $isPointBOnPlane = isPointOnPlane($pointB, $plane);
+        if($isPointAOnPlane == 1 && $isPointBOnPlane == 1) {
+            //Case where the line belongs to the plane... throw an error as there cannot be an intersection.
+            error("The line you are trying to interset with the the plane belongs to the plane, and has infinite solutions");
+        }
+
+        if($isPointAOnPlane == 1) {
+            //this is an easy out, because this point has to be the intersection
+            return $pointA;
+        }
+
+        if($isPointBOnPlane == 1) {
+            //this is an easy out, because this point has to be the intersection
+            return $pointB;
+        }
+
+        //Extract the normal from the plane equation (A,B,C)
+        float $normal[3];
+
+        $normal[0] = $plane[0];
+        $normal[1] = $plane[1];
+        $normal[2] = $plane[2];
+
+        //Get the vector from b to a, our ray, in this case...
+        float $ba[3];
+        $ba[0] = $pointA[0] -  $pointB[0];
+        $ba[1] = $pointA[1] -  $pointB[1];
+        $ba[2] = $pointA[2] -  $pointB[2];
+
+        //get their dot products from the normal.
+        float $nDotA = getDotProduct($normal, $pointA);
+        float $nDotBA = getDotProduct($normal, $ba);
+
+        //if nDotBA is zero, then the line is parallel to the plane, and there is no intersection
+
+        if($nDotBA == 0) {
+            error("Line was parallel to the plane... bailing out to avoid dividing by zero...");
+        }
+
+        //Raycast away, tell us the intersection
+        float $solution[3];
+
+        $solution[0] = $pointA[0] + ((($plane[3] - $nDotA)/$nDotBA) * $ba[0]);
+        $solution[1] = $pointA[1] + ((($plane[3] - $nDotA)/$nDotBA) * $ba[1]);
+        $solution[2] = $pointA[2] + ((($plane[3] - $nDotA)/$nDotBA) * $ba[2]);
+
+        //because we checked that this ray was parallel, we are guaranteed a collision. 
+        //So now we have to check that our collision is within the bounds of the points, 
+        //IE: belongs to the line (AB)
+
+        //TODO
+
+        return $solution;
     }
-    */
-    proc float[] getCorners(string $mesh) {
+
+    proc float[] getCorners(string $mesh, int $worldSpace) {
         float $result[];
         int $facetCount[] = `polyEvaluate -face ($mesh+".f[0]")`;
         int $currentResultIndex = 0;
@@ -60,7 +158,13 @@
             $faceString = `polyInfo -fv ($mesh + ".f[0]")`;
             float $vertexIndeces[] = extractValues($faceString[0]);
             for($i = 0; $i < size($vertexIndeces); $i++) {
-                 float $vertex[] = `getAttr ($mesh + ".vt[" + $vertexIndeces[$i] + "]")`;
+                float $vertex[];
+                if($worldSpace == 1) {
+                    $vertex = `pointPosition -w ($mesh + ".pt[" + $vertexIndeces[$i] + "]")`;
+                } else {
+                    $vertex = `getAttr ($mesh + ".vt[" + $vertexIndeces[$i] + "]")`;
+                }
+                 
                  
                  for($f in $vertex) {
                      $result[$currentResultIndex] = $f;
@@ -85,7 +189,7 @@
 
         float $expectedResult = dotProduct($v1,$v2, false);
         if($result != $expectedResult) {
-            print("ASSERTION FAILED: Dot product was " + $result + " Instead of " + $expectedResult);
+            error("ASSERTION FAILED: Dot product was " + $result + " Instead of " + $expectedResult);
         }
         
         return $result;
@@ -96,21 +200,21 @@
         float $resultingVector[4];
         
         $result[0] = ($v1[1] * $v2[2]) - ($v1[2] * $v2[1]);
-        $result[1] = ($v1[0] * $v2[2]) - ($v1[2] * $v2[0]);
+        $result[1] = ($v1[2] * $v2[0]) - ($v1[0] * $v2[2]);
         $result[2] = ($v1[0] * $v2[1]) - ($v1[1] * $v2[0]);
         
         float $expectedResultingVector[] = crossProduct($v1,$v2, false, false);
         
         if($result[0] != $expectedResultingVector[0]) {
-            print("ASSERTION FAILED: Cross product x was " + $result[0] + " Instead of " + $expectedResultingVector[0]);
+            error("ASSERTION FAILED: Cross product x was " + $result[0] + " Instead of " + $expectedResultingVector[0]);
         }
         
         if($result[1] != $expectedResultingVector[1]) {
-            print("ASSERTION FAILED: Cross product y was " + $result[1] + " Instead of " + $expectedResultingVector[1]);
+            error("ASSERTION FAILED: Cross product y was " + $result[1] + " Instead of " + $expectedResultingVector[1]);
         }
         
         if($result[2] != $expectedResultingVector[2]) {
-            print("ASSERTION FAILED: Cross product z was " + $result[2] + " Instead of " + $expectedResultingVector[2]);
+            error("ASSERTION FAILED: Cross product z was " + $result[2] + " Instead of " + $expectedResultingVector[2]);
         }
         
         
@@ -118,22 +222,85 @@
     }
     
     
-    select mPlane;
-    float $planePosition[3] = `xform -worldSpace -query -translation mPlane`;
-    print(getDotProduct({0,1,2},{0,2,3}) + "\n");
-    print(getCrossProduct({0,1,2},{0,2,3}));
-    float $corners[] = getCorners("mPlane");
-    print $corners;
-    int $currentCorner = 0;
-    for($i = 0; $i < size($corners); $i+=3) {
-        string $locator[] = `spaceLocator -p $corners[$i] $corners[$i + 1] $corners[$i + 2] -name ("Corner: "+$currentCorner)`;
-        parent -r $locator mPlane ;
-        $currentCorner++;
+    
+    print("-------------\n");
+    print("DEBUG OUTPUT\n");
+    print("-------------\n\n");
+    
+    print("Selected Objects:\n\n");
+    string $locators[] = findAllLocatorsInSelection();
+    print(size($locators) + " Locators\n");
+    string $meshes[] = findAllMeshesInSelection();
+    print(size($locators) + " Meshes\n");
+    
+    print("------------\n\n");
+    
+    if(size($meshes)) {
+        print("Inspection of planes in selection:\n\n");
+        
+        for($plane in $meshes) {
+            print("Plane '" + $plane + "':\n\n");
+            float $corners[] = getCorners($plane, false);
+            float $worldCorners[] = getCorners($plane, true);
+            
+            print("\nPlane Equation:\n");
+            float $planeEq[] = getPlaneEquation({$worldCorners[0],$worldCorners[1],$worldCorners[2]}, {$worldCorners[3],$worldCorners[4],$worldCorners[5]}, {$worldCorners[6],$worldCorners[7],$worldCorners[8]});
+            print("\tA: " + $planeEq[0] + " B: " + $planeEq[1] + " C: " + $planeEq[2] + " D: " + $planeEq[3] + "\n");
+            
+            
+            print("\nLocal Corners (Locators parented to plane):\n");
+            
+            for($i = 0; $i < size($corners); $i+= 3) {
+                print("\t" + $i/3 + "- x:" + $corners[$i] + " y:" + $corners[$i + 1] + " z:" + $corners[$i + 2] + "\n" );
+            }
+            
+            print("\nWorld Corners (Locators parented to plane):\n");
+            
+            for($i = 0; $i < size($corners); $i+= 3) {
+                print("\t" + $i/3 + "- x:" + $worldCorners[$i] + " y:" + $worldCorners[$i + 1] + " z:" + $worldCorners[$i + 2] + "\n" );
+            }
+            
+            
+            print("\nNormalized Local Normal Vector (Blue curve):\n");
+            float $normal[] = getNormalVector({$corners[0],$corners[1],$corners[2]}, 
+                                              {$corners[3],$corners[4],$corners[5]},
+                                              {$corners[6],$corners[7],$corners[8]});
+                                            
+            $normal = normalizeVector($normal);
+            string $normalWidget = `curve -d 1 -p 0 0 0 -p $normal[0] $normal[1] $normal[2] -k 0 -k 1 `;
+            parent -r $normalWidget mPlane;
+            
+            print("\tX: " + $normal[0] + " Y: " + $normal[1] + " Z: " + $normal[2] + "\n\n");
+            
+            print("\nNormalized World Normal Vector (Blue curve):\n\n");
+            float $worldNormal[] = getNormalVector({$worldCorners[0],$worldCorners[1],$worldCorners[2]}, 
+                                              {$worldCorners[3],$worldCorners[4],$worldCorners[5]},
+                                              {$worldCorners[6],$worldCorners[7],$worldCorners[8]});
+                                            
+            $worldNormal = normalizeVector($worldNormal);
+            
+            print("\tX: " + $worldNormal[0] + " Y: " + $worldNormal[1] + " Z: " + $worldNormal[2] + "\n\n\n");
+        }
+
+        print("Inspection of locators in selection:\n\n");
+        float $worldCorners[] = getCorners($plane, true);
+        float $planeEq[] = getPlaneEquation({$worldCorners[0],$worldCorners[1],$worldCorners[2]}, {$worldCorners[3],$worldCorners[4],$worldCorners[5]}, {$worldCorners[6],$worldCorners[7],$worldCorners[8]});
+
+        for($locator in $locators) {
+            print("Locator '"+ $locator + "':\n\n");
+            float $locatorWorldPos[] = `pointPosition -w $locator`;
+            print("\tWorld Position - X: " + $locatorWorldPos[0] + " Y: " + $locatorWorldPos[1] + " Z: " + $locatorWorldPos[2] + "\n");
+            print("\tPoint Plane Distance: " + getPointPlaneDistance($planeEq, $locatorWorldPos) + "\n\n");
+        }
+
+        if(size($locators) == 2) {
+            print("\n\nFound Two locators, Line intersection is:\n");
+            float $linePlaneIntersection[] = getLinePlaneIntersection($planeEq, `pointPosition -w $locators[0]`, `pointPosition -w $locators[1]`);
+            print("\tx: " + $linePlaneIntersection[0] + " y: " + $linePlaneIntersection[1] +  " z: " + $linePlaneIntersection[2]);
+        }
+    } else {
+        print("Can't analyze, need at least one mesh to be selected.");
     }
     
-    float $normal[3] = getNormalVector({$corners[0],$corners[1],$corners[2]}, {$corners[3],$corners[4],$corners[5]}, {$corners[6],$corners[7],$corners[8]});
-    $normal = normalizeVector($normal);
-    string $normalWidget = `curve -d 1 -p 0 0 0 -p $normal[0] $normal[1] $normal[2] -k 0 -k 1 `;
-    parent -r $normalWidget mPlane;
-
+    clear($initialSelection);
 }
