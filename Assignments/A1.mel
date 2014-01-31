@@ -1,16 +1,6 @@
 {
+    //read our selection off so we cant muck with it
     string $initialSelection[] = `ls -sl -typ transform`;
-    //Reset routines
-    select mPlane;
-
-    //Delete child transform nodes, specifically the locators 
-    //used to represent the corners and the spline to represent 
-    //the normals.
-    string $children[] = `listRelatives -ad -type transform`;
-    for($name in $children) {
-        select $name;
-        doDelete;
-    }
     
     //NON ASSIGNMENT PROCS
     proc float[] extractValues(string $stringValues) {
@@ -27,6 +17,19 @@
     proc int isPointOnPlane(float $point[], float $plane[]) {
         //if Ax + By + Cz + D = 0 then the line is on the plane.
         return $plane[0] * $point[0] + $plane[1] * $point[1] + $plane[2] * $point[2] + $plane[3] == 0;
+    }
+
+    proc float getAngle(float $va[], float $vb[]) {
+        float $dot = getDotProduct($va,$vb);
+        float $lengthProduct = getModulus($va) * getModulus($vb);
+        if($lengthProduct  == 0) {
+            error("The vectors you are attempting to get the angle of are zero length.");
+        }
+        
+        float $cosTheta = $dot/$lengthProduct ;
+        
+
+        return acos($cosTheta);
     }
     
     proc float[] normalizeVector(float $vector[]) {
@@ -50,7 +53,15 @@
         return $result;
     }
 
+   
+
     //ASSIGNMENT PROCS
+    
+    proc float getModulus(float $vector[]) {
+        //modulus is the vector length, or magnitude.
+        return sqrt($vector[0]*$vector[0] + $vector[1]*$vector[1] + $vector[2]*$vector[2]);
+    }
+    
     proc float[] getNormalVector(float $vA[], float $vB[], float $vC[]) {
         float $v1[3], $v2[3];
         $v1[0] = $vA[0] - $vC[0];
@@ -65,8 +76,11 @@
     }
 
     proc float[] getPlaneEquation(float $vA[], float $vB[], float $vC[]) {
+        //plane equation is Ax + By + Cz = D where ABC is the normal vector.
         float $vN[3]; 
         $vN = getNormalVector($vA, $vB, $vC);
+
+        //solve for D based on the above eq
         float $vD = 0;
         $vD += $vN[0] * $vA[0];
         $vD += $vN[1] * $vA[1];
@@ -89,7 +103,7 @@
         //Formula for point plane distance is {A, B, C} . (P-X)/lengthOf({A,B,C}) 
         //where X is the point {0,0,-D/C} (hence, on the plane) and P is the given point.
         //simplified, this gives us:
-        return ($plane[0] * $point[0] + $plane[1] * $point[1] + $plane[2] * $point[2] + $plane[3]) / sqrt($plane[0]*$plane[0] + $plane[1]*$plane[1] + $plane[2]*$plane[2]);
+        return ($plane[0] * $point[0] + $plane[1] * $point[1] + $plane[2] * $point[2] + $plane[3]) / getModulus({$plane[0], $plane[1], $plane[2]});
     }
 
     proc float[] getLinePlaneIntersection(float $plane[], float $pointA[], float $pointB[]) {
@@ -139,12 +153,6 @@
         $solution[0] = $pointA[0] + ((($plane[3] - $nDotA)/$nDotBA) * $ba[0]);
         $solution[1] = $pointA[1] + ((($plane[3] - $nDotA)/$nDotBA) * $ba[1]);
         $solution[2] = $pointA[2] + ((($plane[3] - $nDotA)/$nDotBA) * $ba[2]);
-
-        //because we checked that this ray was parallel, we are guaranteed a collision. 
-        //So now we have to check that our collision is within the bounds of the points, 
-        //IE: belongs to the line (AB)
-
-        //TODO
 
         return $solution;
     }
@@ -267,8 +275,6 @@
                                               {$corners[6],$corners[7],$corners[8]});
                                             
             $normal = normalizeVector($normal);
-            string $normalWidget = `curve -d 1 -p 0 0 0 -p $normal[0] $normal[1] $normal[2] -k 0 -k 1 `;
-            parent -r $normalWidget mPlane;
             
             print("\tX: " + $normal[0] + " Y: " + $normal[1] + " Z: " + $normal[2] + "\n\n");
             
@@ -297,6 +303,31 @@
             print("\n\nFound Two locators, Line intersection is:\n");
             float $linePlaneIntersection[] = getLinePlaneIntersection($planeEq, `pointPosition -w $locators[0]`, `pointPosition -w $locators[1]`);
             print("\tx: " + $linePlaneIntersection[0] + " y: " + $linePlaneIntersection[1] +  " z: " + $linePlaneIntersection[2]);
+        }
+
+        if(size($locators) == 3) {
+            print("\n\nFound Three locators:\n");
+            float $va[] = `pointPosition -w $locators[0]`;
+            float $vb[] = `pointPosition -w $locators[1]`;
+            float $vc[] = `pointPosition -w $locators[2]`;
+
+            float $ba[];
+            $ba[0] = $va[0] -  $vb[0];
+            $ba[1] = $va[1] -  $vb[1];
+            $ba[2] = $va[2] -  $vb[2];
+
+            float $bc[];
+            $bc[0] = $vc[0] -  $vb[0];
+            $bc[1] = $vc[1] -  $vb[1];
+            $bc[2] = $vc[2] -  $vb[2];
+
+            float $cross[] = getCrossProduct($ba,$bc);
+            float $angle = getAngle($ba, $bc);
+
+            print("cross product of BA and BC is:\n");
+            print("\tx: " + $cross[0] + " y: " + $cross[1] +  " z: " + $cross[2]);
+            print("\nangle between them is:\n");
+            print("\ttheta (in radians): " + $angle);
         }
     } else {
         print("Can't analyze, need at least one mesh to be selected.");
