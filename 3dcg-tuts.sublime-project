@@ -1,0 +1,12 @@
+{
+	"folders":
+	[
+		{
+			"follow_symlinks": true,
+			"path": "/Users/JakeCataford/code/3dcg-tutorials"
+		}
+	],
+  "python_package_paths": [
+      "/Applications/Autodesk/maya2014/devkit/devkit/other/pymel/extras/completion/py",
+    ]
+}
