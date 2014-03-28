@@ -135,11 +135,11 @@ class Block(Generator):
     cmds.columnLayout(width=Constants["window_width"])
     
     cmds.text(Labels["width_label"])
-    width_slider = cmds.intSliderGrp(cls.get_prefix() + Labels["width_label"], annotation=Labels["width_label"], width=Constants["window_width"], minValue=Constants["min_block_width"], maxValue=Constants["max_block_width"], field=True)
+    width_slider = cmds.intSliderGrp(cls.get_prefix() + Labels["width_label"], annotation=Labels["width_label"], width=Constants["window_width"], minValue=Constants["min_block_width"], maxValue=Constants["max_block_width"], value=3, field=True)
     cmds.text(Labels["height_label"])
-    height_slider = cmds.intSliderGrp(cls.get_prefix() + Labels["height_label"], annotation=Labels["height_label"], width=Constants["window_width"], minValue=Constants["min_block_height"], maxValue=Constants["max_block_height"], field=True)
+    height_slider = cmds.intSliderGrp(cls.get_prefix() + Labels["height_label"], annotation=Labels["height_label"], width=Constants["window_width"], minValue=Constants["min_block_height"], maxValue=Constants["max_block_height"], value=3, field=True)
     cmds.text(Labels["depth_label"])
-    depth_slider = cmds.intSliderGrp(cls.get_prefix() + Labels["depth_label"], annotation=Labels["depth_label"], width=Constants["window_width"], minValue=Constants["min_block_width"], maxValue=Constants["max_block_width"], field=True)
+    depth_slider = cmds.intSliderGrp(cls.get_prefix() + Labels["depth_label"], annotation=Labels["depth_label"], width=Constants["window_width"], minValue=Constants["min_block_width"], maxValue=Constants["max_block_width"], value=3, field=True)
     cmds.text(Labels["color_label"])
     color_slider = cmds.colorSliderGrp(cls.get_prefix() + Labels["color_label"], annotation=Labels["color_label"], width=Constants["window_width"])
 
@@ -196,7 +196,7 @@ class PerforatedBlock(Generator):
     cmds.columnLayout(width=Constants["window_width"])
     
     cmds.text(Labels["width_label"])
-    width_slider = cmds.intSliderGrp(cls.get_prefix() + Labels["width_label"], annotation=Labels["width_label"], width=Constants["window_width"], minValue=Constants["min_block_width"], maxValue=Constants["max_block_width"], field=True)
+    width_slider = cmds.intSliderGrp(cls.get_prefix() + Labels["width_label"], annotation=Labels["width_label"], width=Constants["window_width"], minValue=Constants["min_block_width"], maxValue=Constants["max_block_width"], value=3, field=True)
     cmds.text(Labels["color_label"])
     color_slider = cmds.colorSliderGrp(cls.get_prefix() + Labels["color_label"], annotation=Labels["color_label"], width=Constants["window_width"])
     cmds.setParent('..')
@@ -265,7 +265,7 @@ class PerforatedBar(Generator):
     cmds.columnLayout(width=Constants["window_width"])
     
     cmds.text(Labels["width_label"])
-    width_slider = cmds.intSliderGrp(cls.get_prefix() + Labels["width_label"], annotation=Labels["width_label"], width=Constants["window_width"], minValue=Constants["min_block_width"], maxValue=Constants["max_block_width"], field=True)
+    width_slider = cmds.intSliderGrp(cls.get_prefix() + Labels["width_label"], annotation=Labels["width_label"], width=Constants["window_width"], minValue=Constants["min_block_width"], maxValue=Constants["max_block_width"], value=3, field=True)
     cmds.text(Labels["color_label"])
     color_slider = cmds.colorSliderGrp(cls.get_prefix() + Labels["color_label"], annotation=Labels["color_label"], width=Constants["window_width"])
     cmds.setParent('..')
@@ -337,9 +337,9 @@ class PerforatedBarWithKink(Generator):
     cmds.columnLayout(width=Constants["window_width"])
     
     cmds.text(Labels["before_kink_label"])
-    before_kink_slider = cmds.intSliderGrp(cls.get_prefix() + Labels["before_kink_label"], annotation=Labels["before_kink_label"], width=Constants["window_width"], minValue=Constants["min_block_width"], maxValue=Constants["max_block_width"], field=True)
+    before_kink_slider = cmds.intSliderGrp(cls.get_prefix() + Labels["before_kink_label"], annotation=Labels["before_kink_label"], width=Constants["window_width"], minValue=Constants["min_block_width"], maxValue=Constants["max_block_width"], value=3, field=True)
     cmds.text(Labels["after_kink_label"])
-    after_kink_slider = cmds.intSliderGrp(cls.get_prefix() + Labels["after_kink_label"], annotation=Labels["after_kink_label"], width=Constants["window_width"], minValue=Constants["min_block_width"], maxValue=Constants["max_block_width"], field=True)
+    after_kink_slider = cmds.intSliderGrp(cls.get_prefix() + Labels["after_kink_label"], annotation=Labels["after_kink_label"], width=Constants["window_width"], minValue=Constants["min_block_width"], maxValue=Constants["max_block_width"], value=3, field=True)
     cmds.text(Labels["color_label"])
     color_slider = cmds.colorSliderGrp(cls.get_prefix() + Labels["color_label"], annotation=Labels["color_label"], width=Constants["window_width"])
     cmds.setParent('..')
@@ -384,7 +384,7 @@ class Axle(Generator):
     cmds.columnLayout(width=Constants["window_width"])
     
     cmds.text(Labels["width_label"])
-    width_slider = cmds.intSliderGrp(cls.get_prefix() + Labels["width_label"], annotation=Labels["width_label"], width=Constants["window_width"], minValue=Constants["min_block_width"], maxValue=Constants["max_block_width"], field=True)
+    width_slider = cmds.intSliderGrp(cls.get_prefix() + Labels["width_label"], annotation=Labels["width_label"], width=Constants["window_width"], minValue=Constants["min_block_width"], maxValue=Constants["max_block_width"], value=3, field=True)
     cmds.text(Labels["color_label"])
     color_slider = cmds.colorSliderGrp(cls.get_prefix() + Labels["color_label"], annotation=Labels["color_label"], width=Constants["window_width"])
     cmds.setParent('..')
@@ -486,13 +486,13 @@ class BigWheel(Generator):
     cmds.columnLayout(width=Constants["window_width"])
     
     cmds.text(Labels["radius_label"])
-    radius_slider = cmds.intSliderGrp(cls.get_prefix() + Labels["radius_label"], annotation=Labels["radius_label"], width=Constants["window_width"], minValue=Constants["wheel_min_radius"], maxValue=Constants["max_block_width"], field=True)
+    radius_slider = cmds.intSliderGrp(cls.get_prefix() + Labels["radius_label"], annotation=Labels["radius_label"], width=Constants["window_width"], minValue=Constants["wheel_min_radius"], maxValue=Constants["max_block_width"], value=3, field=True)
 
     cmds.text(Labels["height_label"])
-    height_slider = cmds.intSliderGrp(cls.get_prefix() + Labels["height_label"], annotation=Labels["radius_label"], width=Constants["window_width"], minValue=1, maxValue=Constants["max_block_width"], field=True)
+    height_slider = cmds.intSliderGrp(cls.get_prefix() + Labels["height_label"], annotation=Labels["radius_label"], width=Constants["window_width"], minValue=1, maxValue=Constants["max_block_width"], value=3, field=True)
 
     cmds.text(Labels["subdivs_label"])
-    height_slider = cmds.intSliderGrp(cls.get_prefix() + Labels["subdivs_label"], annotation=Labels["subdivs_label"], width=Constants["window_width"], minValue=Constants["wheel_min_subdivs"], maxValue=Constants["wheel_max_subdivs"], field=True)
+    height_slider = cmds.intSliderGrp(cls.get_prefix() + Labels["subdivs_label"], annotation=Labels["subdivs_label"], width=Constants["window_width"], minValue=Constants["wheel_min_subdivs"], maxValue=Constants["wheel_max_subdivs"],value=3, field=True)
 
     cmds.text(Labels["color_label"])
     color_slider = cmds.colorSliderGrp(cls.get_prefix() + Labels["color_label"], annotation=Labels["color_label"], width=Constants["window_width"])
@@ -566,9 +566,9 @@ class PerforatedBarWithRightAngle(Generator):
     cmds.columnLayout(width=Constants["window_width"])
     
     cmds.text(Labels["before_kink_label"])
-    before_kink_slider = cmds.intSliderGrp(cls.get_prefix() + Labels["before_kink_label"], annotation=Labels["before_kink_label"], width=Constants["window_width"], minValue=Constants["min_block_width"], maxValue=Constants["max_block_width"],field=True)
+    before_kink_slider = cmds.intSliderGrp(cls.get_prefix() + Labels["before_kink_label"], annotation=Labels["before_kink_label"], width=Constants["window_width"], minValue=Constants["min_block_width"], maxValue=Constants["max_block_width"], value=3, field=True)
     cmds.text(Labels["after_kink_label"])
-    after_kink_slider = cmds.intSliderGrp(cls.get_prefix() + Labels["after_kink_label"], annotation=Labels["after_kink_label"], width=Constants["window_width"], minValue=Constants["min_block_width"], maxValue=Constants["max_block_width"],field=True)
+    after_kink_slider = cmds.intSliderGrp(cls.get_prefix() + Labels["after_kink_label"], annotation=Labels["after_kink_label"], width=Constants["window_width"], minValue=Constants["min_block_width"], maxValue=Constants["max_block_width"], value=3,field=True)
     cmds.text(Labels["color_label"])
     color_slider = cmds.colorSliderGrp(cls.get_prefix() + Labels["color_label"], annotation=Labels["color_label"], width=Constants["window_width"])
     cmds.setParent('..')
@@ -589,7 +589,8 @@ class Picker(Generator):
     cmds.button(command=PerforatedBlock.draw_ui, label="Perforated Block")
     cmds.button(command=PerforatedBar.draw_ui, label="Perforated Bar")
     cmds.button(command=PerforatedBarWithKink.draw_ui, label="Perforated Bar With Kink")
-    cmds.button(command=PerforatedBarWithRightAngle.draw_ui, label="Perforated Bar With Kink")
+    cmds.button(command=Axle.draw_ui, label="Axle")
+    cmds.button(command=PerforatedBarWithRightAngle.draw_ui, label="Perforated Bar With Right Angle")
     cmds.button(command=Wheel.draw_ui, label="Wheel")
     cmds.setParent('..')
     cmds.setParent('..')
